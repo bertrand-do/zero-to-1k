@@ -9,7 +9,7 @@ By [@BertrandDiouly](https://x.com/BertrandDiouly).
 | | |
 |---|---|
 | [`PLAYBOOK.md`](PLAYBOOK.md) | The step-by-step playbook: profile, day 1, day 2, posts, milestones, routine, what didn't work |
-| [`finder/`](zero-to-1k) | The finder I built: shows X posts that are climbing fast enough to be worth a reply, with filters you can see and edit. Runs on your machine, plus a Chrome side-panel extension |
+| [`finder/`](finder) | The finder I built: shows X posts that are climbing fast enough to be worth a reply, with filters you can see and edit. Runs on your machine, plus a Chrome side-panel extension |
 | [`lessons/`](lessons) | The bio lesson, and a prompt to have your agent write your bio |
 | [`research/`](research) | Rob's run (post IDs + metrics), the velocity tracker, and my own numbers |
 
