@@ -1,9 +1,9 @@
-# xreplies server: serves the tabs on http://127.0.0.1:5191 and runs a search only when you press Fetch.
+# zero-to-1k finder: serves the tabs on http://127.0.0.1:5191 and runs a search only when you press Fetch.
 import threading,time,http.server,os,json,urllib.parse,sys,base64
 APP=os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0,APP)
 DATA=os.path.join(APP,'..','data'); os.makedirs(DATA,exist_ok=True); os.chdir(DATA)
 import config as CFG,rising,connect,followers
-PW=os.environ.get('XREPLIES_PASSWORD','')
+PW=os.environ.get('ZERO_TO_1K_PASSWORD','')
 EXT=os.path.join(APP,'..','extension')   # only needed if you expose the page beyond your own machine
 TABS={}
 def build_tabs():
@@ -43,7 +43,7 @@ class H(http.server.SimpleHTTPRequestHandler):
       self.send_response(302); self.send_header('Set-Cookie',f'xr={PW}; Max-Age=2592000; Path=/; HttpOnly; Secure; SameSite=Lax')
       self.send_header('Location',urllib.parse.urlparse(self.path).path or '/'); self.end_headers(); return False
     if not ok:
-      self.send_response(401); self.send_header('WWW-Authenticate','Basic realm="xreplies"'); self.end_headers(); return False
+      self.send_response(401); self.send_header('WWW-Authenticate','Basic realm="zero-to-1k"'); self.end_headers(); return False
     return True
   def do_OPTIONS(self):
     self.send_response(204); self.send_header('Access-Control-Allow-Origin','*'); self.send_header('Access-Control-Allow-Headers','Content-Type'); self.send_header('Access-Control-Allow-Methods','GET,POST'); self.end_headers()
@@ -131,5 +131,5 @@ class H(http.server.SimpleHTTPRequestHandler):
     b=open(path,'rb').read(); self.send_response(200); self.send_header('Content-Type',ctype+'; charset=utf-8'); self.send_header('Cache-Control','no-store'); self.end_headers(); self.wfile.write(b)
   def _copy_filters(self):
     import shutil; shutil.copy(os.path.join(APP,'filters.html'),'filters.html'); return True
-print('xreplies on http://127.0.0.1:5191',flush=True)
+print('zero-to-1k finder on http://127.0.0.1:5191',flush=True)
 http.server.ThreadingHTTPServer(('127.0.0.1',5191),H).serve_forever()

@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "xreplies",
+  "name": "Zero to 1k",
   "version": "0.1.0",
-  "description": "Rising X posts worth replying to, and builders to connect with. Reads the local xreplies finder.",
-  "action": { "default_title": "Open xreplies" },
+  "description": "Rising X posts worth replying to, and builders to connect with. Reads your local zero-to-1k finder.",
+  "action": { "default_title": "Open Zero to 1k" },
   "side_panel": { "default_path": "panel.html" },
   "background": { "service_worker": "background.js" },
   "permissions": ["sidePanel", "tabs", "storage"],

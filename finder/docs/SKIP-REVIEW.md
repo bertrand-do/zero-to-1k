@@ -1,6 +1,6 @@
 # Turning skips into filters
 
-Every time you press **Skip** on a card and give a reason, it's saved to `xreplies/data/feedback.jsonl` with the post's author, text and stats.
+Every time you press **Skip** on a card and give a reason, it's saved to `finder/data/feedback.jsonl` with the post's author, text and stats.
 
 After a session, ask your agent: **"review my skips"**. It should:
 

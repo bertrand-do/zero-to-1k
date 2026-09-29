@@ -1,8 +1,8 @@
 # Setup guide for your agent
 
-You (the agent) are setting up **xreplies**, a local finder for X posts worth replying to, plus the playbook it comes from. Work through the steps in order, run the commands yourself, and only stop to ask the user for things only they can do (sign-ins, their handle, their topics). Explain costs before spending money.
+You (the agent) are setting up **zero-to-1k**, a local finder for X posts worth replying to, plus the playbook it comes from. Work through the steps in order, run the commands yourself, and only stop to ask the user for things only they can do (sign-ins, their handle, their topics). Explain costs before spending money.
 
-Read `PLAYBOOK.md` first so you understand what the user is trying to do. Read `xreplies/docs/FRAMEWORK.md` for why each filter exists.
+Read `PLAYBOOK.md` first so you understand what the user is trying to do. Read `finder/docs/FRAMEWORK.md` for why each filter exists.
 
 ## 1. Install treg (data access, pay per call)
 
@@ -21,7 +21,7 @@ treg balance
 
 ## 2. Configure
 
-Create `xreplies/config.local.json`. Only put what differs from `config.example.json` (your file is merged on top of it):
+Create `finder/config.local.json`. Only put what differs from `config.example.json` (your file is merged on top of it):
 
 ```json
 { "handle": "their_x_handle_without_@" }
@@ -46,10 +46,10 @@ Thresholds (views, ratios, follower minimums) are in `config.example.json` under
 ## 3. Start the finder
 
 ```
-./xreplies/start.sh
+./finder/start.sh
 ```
 
-It serves http://127.0.0.1:5191 on the user's machine only and fetches nothing until they press **Fetch**. Stop with `./xreplies/stop.sh`.
+It serves http://127.0.0.1:5191 on the user's machine only and fetches nothing until they press **Fetch**. Stop with `./finder/stop.sh`.
 
 Three tabs: **Rising** (posts climbing fast on their topics, with topic chips and a "+ Topic" button), **Followers** (latest posts from people who follow them) and **New builders** (fresh builders saying hi on connect threads). The ⚙ gear in each tab shows and edits its keywords and rules, with how many posts each rule removed.
 
@@ -59,8 +59,8 @@ The user does this by hand:
 
 1. Open `chrome://extensions` (Comet: `comet://extensions`, Arc/Brave: same idea).
 2. Turn on **Developer mode**.
-3. **Load unpacked** → choose the `xreplies/extension` folder.
-4. Pin the xreplies icon and click it. The panel opens beside X, and clicking a post opens it in the tab next to the panel.
+3. **Load unpacked** → choose the `finder/extension` folder.
+4. Pin the Zero to 1k icon and click it. The panel opens beside X, and clicking a post opens it in the tab next to the panel.
 
 The finder (step 3) must be running for the panel to load posts.
 
@@ -77,7 +77,7 @@ claude mcp add --transport http superx https://api.superx.so/v1/mcp --header "Au
 ## 6. Day to day
 
 - The user presses Fetch, replies to what's on the list, and presses **Skip** with a reason on anything that doesn't belong.
-- When they say **"review my skips"**, follow `xreplies/docs/SKIP-REVIEW.md` and propose new filters.
+- When they say **"review my skips"**, follow `finder/docs/SKIP-REVIEW.md` and propose new filters.
 - When they want to change keywords or rules, edit `config.local.json` (or they can use the Filters tab).
 - To re-tune thresholds for their niche, run `research/velocity-tracker/tracker.py` for an evening (≈ $1), then `calibrate.py`.
 
@@ -85,4 +85,4 @@ claude mcp add --transport http superx https://api.superx.so/v1/mcp --header "Au
 
 - Never invent numbers in posts you help write. Use their real numbers.
 - Don't post, follow, or DM on the user's behalf unless they explicitly ask.
-- Keep their data local. `xreplies/data/` and `config.local.json` are theirs and should never be committed or shared.
+- Keep their data local. `finder/data/` and `config.local.json` are theirs and should never be committed or shared.

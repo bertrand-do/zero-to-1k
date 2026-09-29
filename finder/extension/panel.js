@@ -1,4 +1,4 @@
-// xreplies panel. Runs as the Chrome/Comet side panel AND as the web page served by the finder.
+// Zero to 1k panel. Runs as the Chrome/Comet side panel AND as the web page served by the finder.
 const IN_EXT=!!(window.chrome&&chrome.tabs&&chrome.tabs.update);
 const API=location.protocol.startsWith('http')?'':'http://127.0.0.1:5191';
 const store={get:(keys,cb)=>{if(IN_EXT&&chrome.storage)return chrome.storage.local.get(keys,cb);const o={};keys.forEach(k=>{try{const v=localStorage.getItem('xr_'+k);if(v!=null)o[k]=JSON.parse(v)}catch(e){}});cb(o)},

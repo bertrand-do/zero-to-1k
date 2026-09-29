@@ -26,7 +26,7 @@ I didn't invent the method. I copied it from Rob Hallam, who ran a public growth
 I said I would open source the full step-by-step playbook, so here it is. The kit has three things:
 
 1. This playbook.
-2. The xreplies finder app and its Chrome extension, which find rising posts for you to reply under. The README explains how to set it up.
+2. The zero-to-1k finder and its Chrome extension, which find rising posts for you to reply under. The README explains how to set it up.
 3. The research on Rob's run: the numbers and tables I used to build the rules below.
 
 In this playbook I am going to show you what Rob did, the one insight that explains most of it, and then the six steps I followed, with my real numbers and the real posts.

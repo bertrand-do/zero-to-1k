@@ -16,7 +16,7 @@ Rob Hallam's public growth experiment on the @robmailserver account (22 to 25 Se
 
 ## velocity-tracker/
 
-90 fresh AI posts checked every 30 minutes for about 8 hours (25 Sep 2026 evening). It answers: if a post has N views at 30 or 60 minutes, how often does it reach 10k? Results are in `xreplies/docs/FRAMEWORK.md`. `tracker.py` and `calibrate.py` let you run your own (≈ $1 per run) and re-tune the thresholds for your niche.
+90 fresh AI posts checked every 30 minutes for about 8 hours (25 Sep 2026 evening). It answers: if a post has N views at 30 or 60 minutes, how often does it reach 10k? Results are in `finder/docs/FRAMEWORK.md`. `tracker.py` and `calibrate.py` let you run your own (≈ $1 per run) and re-tune the thresholds for your niche.
 
 ## my-run.md
 
