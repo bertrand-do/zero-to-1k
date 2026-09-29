@@ -1,0 +1,5 @@
+xreplies/config.local.json
+xreplies/data/
+research/rob-experiment/rehydrated.json
+__pycache__/
+.DS_Store

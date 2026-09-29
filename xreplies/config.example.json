@@ -1,0 +1,36 @@
+{
+  "handle": "YOUR_X_HANDLE",
+  "topics": {
+    "rising": {
+      "label": "Frontier labs",
+      "keywords": ["claude", "chatgpt", "opus", "(\"gpt astra\" OR \"gpt-6 astra\" OR \"astra minor\")", "muse (meta OR ai OR app OR assistant OR zuck)", "\"gpt-6\"", "grokbot", "(\"gemini 3\" OR \"gemini 4\" OR \"google gemini\" OR \"gemini pro\" OR \"gemini flash\")", "superintelligence"]
+    },
+    "agents": {
+      "label": "Agents & vibe coding",
+      "keywords": ["\"claude code\"", "codex", "cursor", "\"vibe coding\"", "\"vibe coder\"", "\"agents.md\" OR \"claude.md\"", "\"ai agent\" OR \"ai agents\"", "MCP", "\"usage limits\" OR \"rate limit\" OR \"coding plan\""]
+    }
+  },
+  "rules": {
+    "max_age_min": 60,
+    "watch_min_views": 300,
+    "go_min_views": 1000,
+    "min_author_followers": 1000,
+    "flop_min_followers": 20000,
+    "flop_views_ratio": 0.01,
+    "motion_like_ratio": 0.01,
+    "motion_min_replies": 3,
+    "author_min_median_replies": 3,
+    "likepod_min_likes": 20
+  },
+  "rules_on": {
+    "author_size": true, "flop": true, "motion": true, "author_history": true, "like_pod": true,
+    "politics": true, "finance": true, "crypto_names": true, "grok_summons": true, "spam": true
+  },
+  "blocklists": {
+    "politics": "\\b(trump|biden|democrat|republican|election|maga|congress|senate|white house|department of war|pentagon|israel|gaza|ukraine|putin|court|jews?|jewish|antisemit\\w*|goyim|zionis\\w*|muslims?|islam\\w*|christians?|church|rabbi)\\b",
+    "finance": "\\$[A-Z]{2,5}\\b|(?i:price target|\\bstocks?\\b|\\bshares\\b|earnings|bullish|bearish|portfolio|market cap|\\bIPO\\b|milk road|\\btrad(e|es|er|ers|ing)\\b|zcash|shills?)",
+    "crypto_names": "(?i)xbt|btc|eth\\b|\\bsol\\b|crypto|web3|nft|degen|defi|bitcoin|^0x|\\b0x[a-z]|\\$[a-z]{2,}|💎|🚀🚀"
+  },
+  "followers": { "hours": 24, "max_per_person": 2, "languages": ["en", "qme", "zxx", "und"] },
+  "connect": { "min_followers": 100, "max_followers": 20000, "min_account_days": 60, "comment_max_age_min": 60 }
+}

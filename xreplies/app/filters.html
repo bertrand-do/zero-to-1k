@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Filters</title>
+<style>
+:root{--bg:#f7f7f6;--card:#fff;--ink:#0f1419;--mut:#536471;--line:#e6e6e4;--acc:#16a34a}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0b0b;--card:#16181c;--ink:#e7e9ea;--mut:#8b98a5;--line:#2f3336}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 14px 60px}a{color:var(--ink)}
+h1{font-size:24px;margin:8px 0 4px}.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.tabs button{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:8px;padding:5px 10px;cursor:pointer}.tabs button.on{color:var(--ink);border-color:var(--ink)}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}h2{font-size:15px;margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{font-size:13px;border:1px solid var(--line);border-radius:99px;padding:3px 6px 3px 10px;display:flex;gap:6px;align-items:center}.chip button{border:0;background:none;color:var(--mut);cursor:pointer;font-size:14px}
+.add{display:flex;gap:6px;margin-top:10px}.add input{flex:1;font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.add button,.fetch{font:inherit;font-weight:600;border:0;background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 14px;cursor:pointer}
+.rule{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.rule:first-of-type{border-top:0}
+.rule .t{flex:1}.rule .n{font-size:12px;color:var(--mut);white-space:nowrap}
+.sw{position:relative;width:38px;height:22px;flex:none}.sw input{display:none}.sw span{position:absolute;inset:0;background:var(--line);border-radius:99px;cursor:pointer}.sw span:after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s}.sw input:checked+span{background:var(--acc)}.sw input:checked+span:after{left:19px}
+.lock{font-size:11px;color:var(--mut);width:38px;text-align:center}
+.hint{font-size:12px;color:var(--mut);margin-top:8px}
+</style></head><body><main>
+<a href="/">← back to posts</a>
+<h1>Filters</h1><div class="sub" id="sub">What each tab searches for, and what it throws away.</div>
+<div class="tabs" id="tabs"></div><div id="body"></div>
+</main><script>
+const q=new URLSearchParams(location.search);let TAB=q.get('tab')||'rising';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(p){const r=await fetch(p);return r.json()}
+async function tabs(){const t=await api('/api/tabs');document.getElementById('tabs').innerHTML=t.map(x=>`<button class="${x.id===TAB?'on':''}" onclick="TAB='${x.id}';history.replaceState(0,'','?tab=${x.id}');tabs();load()">${esc(x.label)}</button>`).join('')}
+async function load(){const f=await api('/api/filters?tab='+TAB),b=document.getElementById('body');
+ if(f.note){b.innerHTML=`<section><h2>${esc(TAB)}</h2><p>${esc(f.note)}</p><pre style="white-space:pre-wrap;font-size:12px">${esc(JSON.stringify(f.settings,null,2))}</pre><div class="hint">Ask your agent to change these in config.local.json.</div></section>`;return}
+ b.innerHTML=`<section><h2>Keywords (${f.keywords.length})</h2><div class="chips">${f.keywords.map(k=>`<span class="chip">${esc(k)}<button title="remove" onclick="kw('remove',${JSON.stringify(k).replace(/"/g,'&quot;')})">×</button></span>`).join('')}</div>
+ <div class="add"><input id="nk" placeholder='Add a keyword, e.g. "vibe coding" or cursor' onkeydown="if(event.key==='Enter')kw('add',this.value)"><button onclick="kw('add',document.getElementById('nk').value)">Add</button></div>
+ <div class="hint">X search syntax works: quotes for phrases, OR between alternatives.</div></section>
+ <section><h2>Rules ${f.searched!=null?`<span class="n" style="font-weight:400;color:var(--mut)">· last fetch: ${f.kept} kept of ${f.searched} found</span>`:''}</h2>
+ ${f.rules.map(r=>`<div class="rule">${r.locked?'<span class="lock">always</span>':`<label class="sw"><input type="checkbox" ${r.on?'checked':''} onchange="rule('${r.id}',this.checked)"><span></span></label>`}<span class="t">${esc(r.text)}</span><span class="n">${r.dropped==null?'':r.dropped+' dropped'}</span></div>`).join('')}
+ <div class="hint">Numbers (views, ratios) live in config.local.json. Ask your agent: "lower the view bar to 500".</div>
+ <div style="margin-top:12px"><button class="fetch" onclick="fetch('/api/fetch?tab='+TAB).then(()=>{this.textContent='Fetching…';setTimeout(load,12000)})">Fetch now to see new counts</button></div></section>`}
+async function kw(a,v){if(!v||!v.trim())return;await api(`/api/keyword?tab=${TAB}&${a}=${encodeURIComponent(v.trim())}`);load()}
+async function rule(id,on){await api(`/api/rule?id=${id}&on=${on?1:0}`)}
+tabs();load();
+</script></body></html>

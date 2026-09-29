@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>xreplies</title><link rel="stylesheet" href="panel.css"></head>
+<body>
+<header>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="bar">
+    <button id="fetch" class="primary">Fetch</button>
+    <span id="status" class="muted">…</span>
+  </div>
+  <div class="bar small">
+    <label><input type="checkbox" id="hide"> Hide done</label>
+    <span><button id="filtersBtn" class="ghost">Filters</button> <button id="clear" class="ghost">Clear page</button></span>
+  </div>
+</header>
+<main id="list"></main><section id="filters" hidden></section>
+<div id="offline" hidden>
+  <p><b>Finder is not running.</b></p>
+  <p class="muted">Start it on your Mac:</p>
+  <code>./xreplies/start.sh</code>
+</div>
+<script src="panel.js"></script>
+</body></html>
