@@ -74,7 +74,7 @@ def run(topic='rising'):
   for row in sorted(rows,key=lambda x:(x[5][0]!='GO',-x[0])):
     if on.get('author_history') and not author_ok(row[4]['authorUsername'],c): drop['author_history']+=1; continue
     kept.append(row)
-  items=[dict(id=it['id'],url=f"https://x.com/{it['authorUsername']}/status/{it['id']}",handle=it['authorUsername'],name=it.get('authorName') or '',avatar=it.get('authorImage') or '',followers=it.get('authorFollowers') or 0,age=int(age),views=v,replies=rp,likes=it.get('likeCount') or 0,vpm=int(vpm),text=(it.get('text') or '')[:400],verdict=vd[0],why=vd[1]) for vpm,age,v,rp,it,vd in kept[:40]]
+  items=[dict(topic=topic,id=it['id'],url=f"https://x.com/{it['authorUsername']}/status/{it['id']}",handle=it['authorUsername'],name=it.get('authorName') or '',avatar=it.get('authorImage') or '',followers=it.get('authorFollowers') or 0,age=int(age),views=v,replies=rp,likes=it.get('likeCount') or 0,vpm=int(vpm),text=(it.get('text') or '')[:400],verdict=vd[0],why=vd[1]) for vpm,age,v,rp,it,vd in kept[:40]]
   labels=rule_labels(c)
   filters=dict(topic=topic,label=c['topics'][topic]['label'],keywords=KW,searched=len(seen),kept=len(items),
                rules=[dict(id=k,text=labels[k],on=on.get(k,True) if k not in ('too_old','too_few_views') else True,locked=k in ('too_old','too_few_views'),dropped=drop[k]) for k in RULE_TEXT])

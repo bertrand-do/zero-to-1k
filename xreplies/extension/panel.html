@@ -3,20 +3,26 @@
 <title>xreplies</title><link rel="stylesheet" href="panel.css"></head>
 <body>
 <header>
-  <nav class="tabs" id="tabs"></nav>
+  <nav class="tabs" id="tabs">
+    <button data-tab="rising">Rising <span class="count" id="c-rising"></span></button>
+    <button data-tab="followers">Followers <span class="count" id="c-followers"></span></button>
+    <button data-tab="connect">New builders <span class="count" id="c-connect"></span></button>
+  </nav>
+  <p class="purpose" id="purpose"></p>
+  <div class="chips" id="topics"></div>
   <div class="bar">
     <button id="fetch" class="primary">Fetch</button>
     <span id="status" class="muted">…</span>
-  </div>
-  <div class="bar small">
-    <label><input type="checkbox" id="hide"> Hide done</label>
-    <span><button id="filtersBtn" class="ghost">Filters</button> <button id="clear" class="ghost">Clear page</button></span>
+    <span class="spacer"></span>
+    <button id="clear" class="ghost" title="Hide everything on this page">Clear page</button>
+    <button id="gear" class="icon" title="Filters">⚙</button>
   </div>
 </header>
-<main id="list"></main><section id="filters" hidden></section>
+<main id="list"></main>
+<section id="filters" hidden></section>
 <div id="offline" hidden>
-  <p><b>Finder is not running.</b></p>
-  <p class="muted">Start it on your Mac:</p>
+  <p><b>The finder isn't running.</b></p>
+  <p class="muted">Start it on your computer:</p>
   <code>./xreplies/start.sh</code>
 </div>
 <script src="panel.js"></script>

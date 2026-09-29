@@ -51,7 +51,7 @@ Thresholds (views, ratios, follower minimums) are in `config.example.json` under
 
 It serves http://127.0.0.1:5191 on the user's machine only and fetches nothing until they press **Fetch**. Stop with `./xreplies/stop.sh`.
 
-Tabs: one per topic, **Followers** (latest posts from people who follow them), **Let's connect** (fresh builders on connect threads), and **Filters** (what each tab searches for and throws away, editable).
+Three tabs: **Rising** (posts climbing fast on their topics, with topic chips and a "+ Topic" button), **Followers** (latest posts from people who follow them) and **New builders** (fresh builders saying hi on connect threads). The ⚙ gear in each tab shows and edits its keywords and rules, with how many posts each rule removed.
 
 ## 4. Load the side-panel extension (Chrome, or any Chromium browser)
 
