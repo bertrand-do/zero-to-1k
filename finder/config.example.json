@@ -3,11 +3,31 @@
   "topics": {
     "rising": {
       "label": "Frontier labs",
-      "keywords": ["claude", "chatgpt", "opus", "(\"gpt astra\" OR \"gpt-6 astra\" OR \"astra minor\")", "muse (meta OR ai OR app OR assistant OR zuck)", "\"gpt-6\"", "grokbot", "(\"gemini 3\" OR \"gemini 4\" OR \"google gemini\" OR \"gemini pro\" OR \"gemini flash\")", "superintelligence"]
+      "keywords": [
+        "claude",
+        "chatgpt",
+        "opus",
+        "(\"gpt astra\" OR \"gpt-6 astra\" OR \"astra minor\")",
+        "muse (meta OR ai OR app OR assistant OR zuck)",
+        "\"gpt-6\"",
+        "grokbot",
+        "(\"gemini 3\" OR \"gemini 4\" OR \"google gemini\" OR \"gemini pro\" OR \"gemini flash\")",
+        "superintelligence"
+      ]
     },
     "agents": {
       "label": "Agents & vibe coding",
-      "keywords": ["\"claude code\"", "codex", "cursor", "\"vibe coding\"", "\"vibe coder\"", "\"agents.md\" OR \"claude.md\"", "\"ai agent\" OR \"ai agents\"", "MCP", "\"usage limits\" OR \"rate limit\" OR \"coding plan\""]
+      "keywords": [
+        "\"claude code\"",
+        "codex",
+        "cursor",
+        "\"vibe coding\"",
+        "\"vibe coder\"",
+        "\"agents.md\" OR \"claude.md\"",
+        "\"ai agent\" OR \"ai agents\"",
+        "MCP",
+        "\"usage limits\" OR \"rate limit\" OR \"coding plan\""
+      ]
     }
   },
   "rules": {
@@ -23,14 +43,55 @@
     "likepod_min_likes": 20
   },
   "rules_on": {
-    "author_size": true, "flop": true, "motion": true, "author_history": true, "like_pod": true,
-    "politics": true, "finance": true, "crypto_names": true, "grok_summons": true, "spam": true
+    "author_size": true,
+    "flop": true,
+    "motion": true,
+    "author_history": true,
+    "like_pod": true,
+    "politics": true,
+    "finance": true,
+    "crypto_names": true,
+    "grok_summons": true,
+    "spam": true
   },
   "blocklists": {
     "politics": "\\b(trump|biden|democrat|republican|election|maga|congress|senate|white house|department of war|pentagon|israel|gaza|ukraine|putin|court|jews?|jewish|antisemit\\w*|goyim|zionis\\w*|muslims?|islam\\w*|christians?|church|rabbi)\\b",
     "finance": "\\$[A-Z]{2,5}\\b|(?i:price target|\\bstocks?\\b|\\bshares\\b|earnings|bullish|bearish|portfolio|market cap|\\bIPO\\b|milk road|\\btrad(e|es|er|ers|ing)\\b|zcash|shills?)",
     "crypto_names": "(?i)xbt|btc|eth\\b|\\bsol\\b|crypto|web3|nft|degen|defi|bitcoin|^0x|\\b0x[a-z]|\\$[a-z]{2,}|💎|🚀🚀"
   },
-  "followers": { "hours": 24, "max_per_person": 2, "languages": ["en", "qme", "zxx", "und"] },
-  "connect": { "min_followers": 100, "max_followers": 20000, "min_account_days": 60, "comment_max_age_min": 60 }
+  "followers": {
+    "hours": 24,
+    "max_per_person": 2,
+    "languages": [
+      "en",
+      "qme",
+      "zxx",
+      "und"
+    ]
+  },
+  "connect": {
+    "min_followers": 100,
+    "max_followers": 20000,
+    "min_account_days": 60,
+    "comment_max_age_min": 60
+  },
+  "watch": {
+    "handles": [
+      "OpenAI",
+      "sama",
+      "OpenAIDevs"
+    ],
+    "every_sec": 30,
+    "hours": 6,
+    "sound": "Glass",
+    "replies": false
+  },
+  "trending": {
+    "every_min": 30,
+    "queries": [
+      "(AI OR LLM OR model OR agent) min_faves:100 -filter:replies lang:en",
+      "(vibe coding OR vibecoding OR cursor OR claude code OR codex) min_faves:50 -filter:replies lang:en",
+      "(founder OR startup OR indie hacker OR saas OR buildinpublic) min_faves:100 -filter:replies lang:en"
+    ]
+  }
 }

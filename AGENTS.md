@@ -51,7 +51,7 @@ Thresholds (views, ratios, follower minimums) are in `config.example.json` under
 
 It serves http://127.0.0.1:5191 on the user's machine only and fetches nothing until they press **Fetch**. Stop with `./finder/stop.sh`.
 
-Three tabs: **Rising** (posts climbing fast on their topics, with topic chips and a "+ Topic" button), **Followers** (latest posts from people who follow them) and **New builders** (fresh builders saying hi on connect threads). The ⚙ gear in each tab shows and edits its keywords and rules, with how many posts each rule removed.
+Tabs: **Rising** (posts climbing fast on their topics, with topic chips and a "+ Topic" button), **Mutuals** (a "who do I owe a reply" queue: people who commented on your posts, newest first, one fresh post each, ⭐ for regulars and a "you owe N / even / they owe you N" pill counting the last 30 days), **Followers** and **Following** (latest posts from people who follow you or you follow; people you keep replying to who never answer are marked one-way and moved down), **New builders** (fresh builders saying hi on connect threads), **Watched** (Mac ping when chosen accounts post; handles in the tab's ⚙), **Trending** (big posts in AI, vibe coding and founder topics, refreshed every 30 min) and **Memes** (paste with Cmd+V, tag, click to copy). The ⚙ gear in each tab shows and edits its keywords and rules, with how many posts each rule removed. Watched and Trending run in the background and spend a little treg credit; they can be switched off in the panel.
 
 ## 4. Load the side-panel extension (Chrome, or any Chromium browser)
 

@@ -5,8 +5,13 @@
 <header>
   <nav class="tabs" id="tabs">
     <button data-tab="rising">Rising <span class="count" id="c-rising"></span></button>
+    <button data-tab="mutuals">Mutuals <span class="count" id="c-mutuals"></span></button>
     <button data-tab="followers">Followers <span class="count" id="c-followers"></span></button>
+    <button data-tab="following">Following <span class="count" id="c-following"></span></button>
     <button data-tab="connect">New builders <span class="count" id="c-connect"></span></button>
+    <button data-tab="watched">Watched <span class="count" id="c-watched"></span></button>
+    <button data-tab="trending">Trending <span class="count" id="c-trending"></span></button>
+    <button data-tab="memes">Memes <span class="count" id="c-memes"></span></button>
   </nav>
   <p class="purpose" id="purpose"></p>
   <div class="chips" id="topics"></div>
@@ -14,11 +19,14 @@
     <button id="fetch" class="primary">Fetch</button>
     <span id="status" class="muted">…</span>
     <span class="spacer"></span>
+    <button id="myrep" class="jobs" title="Replies you posted today (your computer's timezone). Click to refresh.">💬 …</button>
+    <button id="jobs" class="jobs" title="Start or stop the background checks (Watched + Trending)"></button>
     <button id="clear" class="ghost" title="Hide everything on this page">Clear page</button>
     <button id="gear" class="icon" title="Filters">⚙</button>
   </div>
 </header>
 <main id="list"></main>
+<div id="toast" hidden></div>
 <section id="filters" hidden></section>
 <div id="offline" hidden>
   <p><b>The finder isn't running.</b></p>

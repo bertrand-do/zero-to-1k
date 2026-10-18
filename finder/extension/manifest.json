@@ -1,12 +1,30 @@
 {
   "manifest_version": 3,
   "name": "Zero to 1k",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Rising X posts worth replying to, and builders to connect with. Reads your local zero-to-1k finder.",
-  "action": { "default_title": "Open Zero to 1k" },
-  "side_panel": { "default_path": "panel.html" },
-  "background": { "service_worker": "background.js" },
-  "permissions": ["sidePanel", "tabs", "storage"],
-  "host_permissions": ["http://127.0.0.1:5191/*"],
-  "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" }
+  "action": {
+    "default_title": "Open Zero to 1k"
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "sidePanel",
+    "tabs",
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:5191/*"
+  ],
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  }
 }
