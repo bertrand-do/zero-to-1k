@@ -4,6 +4,8 @@ A free, open source reply finder for X that runs on your own computer. I built i
 
 With the finder, my typical reply went from 13 views to 39, and replies with 100+ views went from 11 to 35 in a similar number of replies. And of the 446 times I paid someone back on the Mutuals tab, 58% of those people came back to my posts within 3 days.
 
+![The Mutuals tab: who commented on your posts, who you owe a reply, one fresh post each to reply on](docs/mutuals-tab.png)
+
 ## What it does
 
 The finder lives in a side panel next to X, with one tab per job:
