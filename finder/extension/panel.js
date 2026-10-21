@@ -13,7 +13,8 @@ const PURPOSE={rising:'Posts climbing fast right now. Reply early to borrow thei
                trending:'Terms and tools suddenly showing up across AI and founder posts. Checked every 30 min, no pings.',
                cleanup:'People you follow who don\'t follow you back. Silent unfollowers first (they followed you before), then small accounts, then big ones you probably want to keep. Read-only: open a profile and unfollow on X yourself.',
                memes:'Your meme library. Cmd+V to save an image, a GIF file or a GIF link (Giphy, Tenor), tag it, click a meme to copy it, then paste it in your reply. ← → cycles tags.'};
-let TAB='mutuals',TOPIC='all',TOPICS=[],DATA=null,POLL=null,MTAG='all',MEMES={items:[],tags:[]};
+const SLOW={mutuals:'takes 3 to 5 min, keep replying meanwhile',cleanup:'takes a couple of min'};   // tabs whose Fetch pages through a lot of X data
+let FSTART=0,TAB='mutuals',TOPIC='all',TOPICS=[],DATA=null,POLL=null,MTAG='all',MEMES={items:[],tags:[]};
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const k=n=>n>=1e6?(n/1e6).toFixed(1).replace('.0','')+'M':n>=1e3?(n/1e3).toFixed(1).replace('.0','')+'k':String(n);
 const mins=m=>m<60?m+' min':m<1440?Math.floor(m/60)+'h':Math.floor(m/1440)+'d';
@@ -61,7 +62,8 @@ function setStatus(){
   else{const m=$('#mstats');if(m)m.hidden=true}
   $('#fetch').disabled=!!DATA.busy;$('#fetch').textContent=DATA.busy?'Fetching…':'Fetch';
   const n=DATA.items.filter(i=>!DATA.done[i.id]).length;
-  $('#status').textContent=DATA.busy?'Searching X…':(DATA.last?`${n} new · ${ago(DATA.last)}`:'Press Fetch to start');
+  if(!DATA.busy)FSTART=0;else if(!FSTART)FSTART=Date.now();
+  $('#status').textContent=DATA.busy?(SLOW[TAB]?`Searching X… ${Math.floor((Date.now()-FSTART)/60000)} min · ${SLOW[TAB]}`:'Searching X…'):(DATA.last?`${n} new · ${ago(DATA.last)}`:'Press Fetch to start');
 }
 function render(){
   if(TAB==='trending')return renderTrending();
