@@ -4,20 +4,20 @@ import json,subprocess,time,datetime,os,sys,html,concurrent.futures as cf
 from common import page as _page,IC,k
 import config as CFG
 FCACHE='followers_list.json'
-def follower_list(kind='followers'):
+def follower_list(kind='followers',fresh=False):   # fresh: skip the 6h cache (Cleanup Fetch)
   cache=FCACHE if kind=='followers' else 'following_list.json'
   ep='followers' if kind=='followers' else 'followings'
   if os.path.exists(cache):
     c=json.load(open(cache))
-    if time.time()-c['t']<6*3600: return c['users']
+    if not fresh and time.time()-c['t']<6*3600: return c['users']
   users=[];cur=None
-  for _ in range(40):
+  for _ in range(80):   # headroom as the lists grow (Cleanup needs the full lists)
     q=['treg','call','tikhub.x.twitter-web-fetch-user-'+ep,'--query','screen_name='+CFG.load()['handle']]+(['--query','cursor='+cur] if cur else [])
     t=subprocess.run(q,capture_output=True,text=True).stdout
     try: d=json.loads(t[t.index('{'):])['data']
     except Exception: break
     lst=d.get('followers') or d.get('followings') or d.get('following') or []
-    users+=[{'h':u['screen_name'],'f':u.get('followers_count') or 0,'av':u.get('profile_image') or ''} for u in lst if u.get('screen_name')]
+    users+=[{'h':u['screen_name'],'f':u.get('followers_count') or 0,'av':u.get('profile_image') or '','name':u.get('name') or '','desc':(u.get('description') or '')[:200]} for u in lst if u.get('screen_name')]
     cur=d.get('next_cursor')
     if not lst or not cur or not d.get('more_users'): break
   seen={};[seen.setdefault(u['h'],u) for u in users]; users=list(seen.values())

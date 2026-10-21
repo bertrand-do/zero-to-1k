@@ -2,7 +2,7 @@
 import threading,time,http.server,os,json,urllib.parse,sys,base64
 APP=os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0,APP)
 DATA=os.path.join(APP,'..','data'); os.makedirs(DATA,exist_ok=True); os.chdir(DATA)
-import config as CFG,rising,connect,followers,watch,trending,jobs,myreplies,mutuals
+import config as CFG,rising,connect,followers,watch,trending,jobs,myreplies,mutuals,cleanup
 PW=os.environ.get('ZERO_TO_1K_PASSWORD','')
 EXT=os.path.join(APP,'..','extension')   # only needed if you expose the page beyond your own machine
 TABS={}
@@ -13,6 +13,7 @@ def build_tabs():
   TABS.setdefault('mutuals',{'fn':mutuals.run,'pending':False,'last':0,'busy':False})
   TABS.setdefault('following',{'fn':(lambda:followers.run(kind='following')),'pending':False,'last':0,'busy':False})
   TABS.setdefault('connect',{'fn':connect.run,'pending':False,'last':0,'busy':False})
+  TABS.setdefault('cleanup',{'fn':cleanup.run,'pending':False,'last':0,'busy':False})
   for n in TABS:
     try: TABS[n]['last']=TABS[n]['last'] or os.path.getmtime(n+'.json')
     except OSError: pass
@@ -35,6 +36,22 @@ def jl(p,d):
 MEMES=os.path.join(DATA,'memes'); os.makedirs(MEMES,exist_ok=True)
 def memes_load(): return jl('memes.json',[])
 def memes_save(L): json.dump(L,open('memes.json','w'),indent=0)
+def fetch_gif(url):   # a .gif link, or a Giphy/Tenor page (we take its og:image / og:video)
+  import urllib.request,re
+  get=lambda u:urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'}),timeout=20)
+  g=re.match(r'https?://(?:www\.)?giphy\.com/(?:gifs|stickers)/(?:[\w-]*-)?(\w+)/?$',url)   # Giphy pages block bots, but the ID gives the file
+  if g: url=f'https://media.giphy.com/media/{g.group(1)}/giphy.gif'
+  r=get(url); ct=r.headers.get('Content-Type','').split(';')[0]; b=r.read()
+  if ct.startswith('text/html'):
+    h=b.decode('utf-8','ignore'); m=None
+    for prop in ('og:image','twitter:image','og:image:url'):
+      m=re.search(r'<meta[^>]+(?:property|name)=["\']'+prop+r'["\'][^>]+content=["\']([^"\']+)',h) or re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\']'+prop+'["\']',h)
+      if m: break
+    if not m: raise ValueError('no image on that page')
+    r=get(m.group(1).replace('&amp;','&')); ct=r.headers.get('Content-Type','').split(';')[0]; b=r.read()
+  ext={'image/png':'png','image/jpeg':'jpg','image/gif':'gif','image/webp':'webp'}.get(ct)
+  if not ext: raise ValueError('not an image: '+ct)
+  return b,ext
 def clean_tags(s): return sorted({x.strip().lower().lstrip('#') for x in (s if isinstance(s,list) else str(s).split(',')) if x.strip()})
 class H(http.server.SimpleHTTPRequestHandler):
   def log_message(self,*a): pass
@@ -66,6 +83,13 @@ class H(http.server.SimpleHTTPRequestHandler):
       open(os.path.join(MEMES,fn),'wb').write(base64.b64decode(b64))
       L=memes_load(); m={'id':mid,'file':fn,'tags':clean_tags(body.get('tags',[])),'added':int(time.time())}; L.insert(0,m); memes_save(L)
       return self.j(m)
+    if u.path=='/api/meme-url':   # {url:"https://...gif or giphy/tenor page", tags:[...]}
+      n=int(self.headers.get('Content-Length') or 0); body=json.loads(self.rfile.read(n) or b'{}')
+      try: b,ext=fetch_gif(body.get('url',''))
+      except Exception as e: return self.j({'error':str(e)[:200]})
+      mid=str(int(time.time()*1000)); fn=mid+'.'+ext; open(os.path.join(MEMES,fn),'wb').write(b)
+      L=memes_load(); m={'id':mid,'file':fn,'tags':clean_tags(body.get('tags',[])),'added':int(time.time())}; L.insert(0,m); memes_save(L)
+      return self.j(m)
     if u.path=='/api/skip':
       n=int(self.headers.get('Content-Length') or 0); body=json.loads(self.rfile.read(n) or b'{}'); body['ts']=time.strftime('%Y-%m-%dT%H:%M:%S')
       with open('feedback.jsonl','a') as f: f.write(json.dumps(body,ensure_ascii=False)+'\n')
@@ -90,6 +114,13 @@ class H(http.server.SimpleHTTPRequestHandler):
       for m in L:
         if m['id']==g('id'): m['used']=m.get('used',0)+1; m['last_used']=int(time.time())
       memes_save(L); return self.j({'ok':True})
+    if u.path=='/api/meme-clip':   # put the file itself on the Mac clipboard, so a GIF pastes as a GIF
+      m=next((m for m in memes_load() if m['id']==g('id')),None)
+      if not m: return self.j({'ok':False},404)
+      if sys.platform!='darwin': return self.j({'ok':False})   # Mac only; the panel falls back to a normal image copy
+      import subprocess; fp=os.path.abspath(os.path.join(MEMES,m['file']))
+      r=subprocess.run(['osascript','-e',f'set the clipboard to (POSIX file "{fp}")'],capture_output=True)
+      return self.j({'ok':r.returncode==0})
     if u.path=='/api/meme-del':
       L=memes_load(); keep=[m for m in L if m['id']!=g('id')]
       for m in L:
@@ -111,7 +142,7 @@ class H(http.server.SimpleHTTPRequestHandler):
       if g('run') in ('0','1'): jobs.set_running(g('run')=='1')
       return self.j({'running':jobs.running()})
     if u.path=='/api/tabs':
-      c=CFG.load(); return self.j([{'id':k,'label':v['label']} for k,v in c['topics'].items()]+[{'id':'followers','label':'Followers'},{'id':'mutuals','label':'Mutuals'},{'id':'following','label':'Following'},{'id':'connect','label':'Connect'},{'id':'watched','label':'Watched'},{'id':'trending','label':'Trending'}])
+      c=CFG.load(); return self.j([{'id':k,'label':v['label']} for k,v in c['topics'].items()]+[{'id':'followers','label':'Followers'},{'id':'mutuals','label':'Mutuals'},{'id':'following','label':'Following'},{'id':'connect','label':'Connect'},{'id':'watched','label':'Watched'},{'id':'trending','label':'Trending'},{'id':'cleanup','label':'Cleanup'}])
     if u.path=='/api/status': return self.j({k:{'busy':v['busy'] or v['pending'],'last':v['last']} for k,v in TABS.items()})
     if u.path in ('/api/fetch','/api/run-now'):
       n=g('tab'); build_tabs()
@@ -125,13 +156,13 @@ class H(http.server.SimpleHTTPRequestHandler):
       label=g('add').strip()[:40]
       if not label: return self.j({'error':'name needed'},400)
       c=CFG.load(); tid=_re.sub(r'[^a-z0-9]+','-',label.lower()).strip('-') or 'topic'
-      while tid in c['topics'] or tid in ('all','followers','connect','filters'): tid+='-2'
+      while tid in c['topics'] or tid in ('all','followers','connect','filters','cleanup'): tid+='-2'
       loc=jl(CFG.LOCAL,{}); loc.setdefault('topics',{})[tid]={'label':label,'keywords':[]}; CFG.save_local(loc); build_tabs()
       return self.j({'id':tid,'label':label})
     if u.path=='/api/counts':
       D=jl('done.json',{}); out={}
       def n_new(tab): return sum(1 for i in jl(tab+'.json',{}).get('items',[]) if i['id'] not in D.get(tab,{}))
-      out['rising']=sum(n_new(k) for k in CFG.load()['topics']); out['followers']=n_new('followers'); out['following']=n_new('following'); out['mutuals']=n_new('mutuals'); out['connect']=n_new('connect'); out['watched']=sum(1 for i in jl('watched.json',{}).get('items',[]) if i['id'] not in D.get('watched',{}) and i['age']<60 and i.get('ping',True))
+      out['rising']=sum(n_new(k) for k in CFG.load()['topics']); out['followers']=n_new('followers'); out['following']=n_new('following'); out['mutuals']=n_new('mutuals'); out['connect']=n_new('connect'); out['cleanup']=n_new('cleanup'); out['watched']=sum(1 for i in jl('watched.json',{}).get('items',[]) if i['id'] not in D.get('watched',{}) and i['age']<60 and i.get('ping',True))
       out['trending']=sum(1 for i in jl('trending.json',{}).get('items',[]) if i.get('flag') in ('SPIKING','NEW'))
       out['memes']=len(memes_load())
       return self.j(out)
@@ -190,7 +221,7 @@ class H(http.server.SimpleHTTPRequestHandler):
           if i: D[tab][i]=-1
       if u.path=='/api/clear': D[tab]={}
       json.dump(D,open('done.json','w')); return self.j(D[tab])
-    if u.path in ('/','/app','/rising','/followers','/mutuals','/following','/connect','/watched','/trending','/memes'):
+    if u.path in ('/','/app','/rising','/followers','/mutuals','/following','/connect','/watched','/trending','/memes','/cleanup'):
       return self._file(os.path.join(EXT,'panel.html'),'text/html')
     if u.path in ('/panel.css','/panel.js'):
       return self._file(os.path.join(EXT,u.path.strip('/')),'text/css' if u.path.endswith('.css') else 'application/javascript')
@@ -203,5 +234,6 @@ class H(http.server.SimpleHTTPRequestHandler):
     b=open(path,'rb').read(); self.send_response(200); self.send_header('Content-Type',ctype+'; charset=utf-8'); self.send_header('Cache-Control','no-store'); self.end_headers(); self.wfile.write(b)
   def _copy_filters(self):
     import shutil; shutil.copy(os.path.join(APP,'filters.html'),'filters.html'); return True
-print('zero-to-1k finder on http://127.0.0.1:5191',flush=True)
-http.server.ThreadingHTTPServer(('127.0.0.1',5191),H).serve_forever()
+PORT=int(os.environ.get('PORT') or 5191)   # override only to run a second test copy
+print(f'zero-to-1k finder on http://127.0.0.1:{PORT}',flush=True)
+http.server.ThreadingHTTPServer(('127.0.0.1',PORT),H).serve_forever()

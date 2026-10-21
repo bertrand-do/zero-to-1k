@@ -5,14 +5,15 @@ const store={get:(keys,cb)=>{if(IN_EXT&&chrome.storage)return chrome.storage.loc
              set:o=>{if(IN_EXT&&chrome.storage)return chrome.storage.local.set(o);for(const k in o){try{localStorage.setItem('xr_'+k,JSON.stringify(o[k]))}catch(e){}}}};
 const REASONS=['no motion','off-topic','crypto / finance','politics','bot / spam','engagement bait','too big to be seen','nothing to add'];
 const PURPOSE={rising:'Posts climbing fast right now. Reply early to borrow their audience.',
-               mutuals:'Who you owe: people who commented on your posts (green) or answered your replies (grey) in the last 48h, most recent first. ⭐ = regulars (commented on 5+ days this month), listed first. Once you reply on their post they drop off until they comment again.',
+               mutuals:'Who you owe: people who commented on your posts (green) or answered your replies (grey) in the last 48h, most recent first. Real mutuals (you follow each other) first, then ⭐ regulars (commented on 5+ days this month). Once you reply on their post they drop off until they comment again.',
                followers:'What your followers just posted. Show up for people who showed up for you.',
                following:'What the people you follow just posted. Stay on their radar so they notice you back.',
                connect:'Real builders who just said hi on connect threads.',
                watched:'Big accounts you watch. Checked every 30s, you get a Mac ping the minute they post.',
                trending:'Terms and tools suddenly showing up across AI and founder posts. Checked every 30 min, no pings.',
-               memes:'Your meme library. Cmd+V to save one, tag it, click a meme to copy it, then paste it in your reply. ← → cycles tags.'};
-let TAB='rising',TOPIC='all',TOPICS=[],DATA=null,POLL=null,MTAG='all',MEMES={items:[],tags:[]};
+               cleanup:'People you follow who don\'t follow you back. Silent unfollowers first (they followed you before), then small accounts, then big ones you probably want to keep. Read-only: open a profile and unfollow on X yourself.',
+               memes:'Your meme library. Cmd+V to save an image, a GIF file or a GIF link (Giphy, Tenor), tag it, click a meme to copy it, then paste it in your reply. ← → cycles tags.'};
+let TAB='mutuals',TOPIC='all',TOPICS=[],DATA=null,POLL=null,MTAG='all',MEMES={items:[],tags:[]};
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const k=n=>n>=1e6?(n/1e6).toFixed(1).replace('.0','')+'M':n>=1e3?(n/1e3).toFixed(1).replace('.0','')+'k':String(n);
 const mins=m=>m<60?m+' min':m<1440?Math.floor(m/60)+'h':Math.floor(m/1440)+'d';
@@ -38,7 +39,7 @@ function renderHeader(){
   const add=$('#addTopic');if(add)add.onclick=async()=>{const name=prompt('Name the new topic (you can add keywords next)');if(!name)return;
     const r=await api('/api/topic?add='+encodeURIComponent(name)).catch(()=>null);if(r&&r.id){TOPICS=await api('/api/topics');TOPIC=r.id;store.set({topic:TOPIC});renderHeader();openFilters()}};
 }
-async function refreshCounts(){try{const c=await api('/api/counts');for(const t of ['rising','mutuals','followers','following','connect','watched','trending','memes']){const el=$('#c-'+t);if(el)el.textContent=c[t]?c[t]:''}}catch(e){}}
+async function refreshCounts(){try{const c=await api('/api/counts');for(const t of ['rising','mutuals','followers','following','connect','watched','trending','cleanup','memes']){const el=$('#c-'+t);if(el)el.textContent=c[t]?c[t]:''}}catch(e){}}
 
 // ---------- list ----------
 async function load(){
@@ -55,7 +56,9 @@ function setStatus(){
   if(TAB==='memes'){const n=MEMES.items.length;$('#status').textContent=n?`${n} meme${n>1?'s':''} · Cmd+V to add`:'Cmd+V to add your first meme';return}
   if(TAB==='trending'){$('#status').textContent=RUNNING===false?`Paused${DATA.last?' · last check '+ago(DATA.last):''}`:DATA.err?'Check failed, retrying…':(DATA.last?`Live · checked ${ago(DATA.last)}`:'Starting…');return}
   if(TAB==='watched'){$('#status').textContent=RUNNING===false?`Paused${DATA.last?' · last check '+ago(DATA.last):''}`:DATA.err?'Check failed, retrying…':(DATA.last?`Live · checked ${ago(DATA.last)}`:'Starting…');return}
-  if(TAB==='mutuals'){let m=$('#mstats');if(!m){m=document.createElement('div');m.id='mstats';m.className='purpose';$('#purpose').after(m)}const s=DATA.stats;m.hidden=false;m.textContent=s&&s.paybacks?`Paid back ${s.paybacks} · ${s.came_back} came back within 3 days (${Math.round(s.rate*100)}%)`:'Measuring: paybacks need 3 days before they count.'}else{const m=$('#mstats');if(m)m.hidden=true}
+  if(TAB==='mutuals'){let m=$('#mstats');if(!m){m=document.createElement('div');m.id='mstats';m.className='purpose';$('#purpose').after(m)}const s=DATA.stats;m.hidden=false;m.textContent=s&&s.paybacks?`Paid back ${s.paybacks} · ${s.came_back} came back within 3 days (${Math.round(s.rate*100)}%)`:'Measuring: paybacks need 3 days before they count.'}
+  else if(TAB==='cleanup'&&DATA.n_followers){let m=$('#mstats');if(!m){m=document.createElement('div');m.id='mstats';m.className='purpose';$('#purpose').after(m)}m.hidden=false;m.textContent=`Checked ${DATA.n_followers.toLocaleString()} followers vs ${DATA.n_following.toLocaleString()} you follow. The data source can miss a few followers: glance at a profile before unfollowing.`}
+  else{const m=$('#mstats');if(m)m.hidden=true}
   $('#fetch').disabled=!!DATA.busy;$('#fetch').textContent=DATA.busy?'Fetching…':'Fetch';
   const n=DATA.items.filter(i=>!DATA.done[i.id]).length;
   $('#status').textContent=DATA.busy?'Searching X…':(DATA.last?`${n} new · ${ago(DATA.last)}`:'Press Fetch to start');
@@ -64,6 +67,8 @@ function render(){
   if(TAB==='trending')return renderTrending();
   const done=DATA.done||{},vis=DATA.items.filter(i=>done[i.id]!==-1),items=vis.filter(i=>!done[i.id]).concat(vis.filter(i=>done[i.id]));  // -1 = cleared: hidden for good
   if(!items.length){$('#list').innerHTML=`<div class="empty">${DATA.last?'Nothing passed the filters. Try again in a few minutes.':'Press Fetch to find posts.'}</div>`;return}
+  if(TAB==='cleanup'){const G={silent:'Silent unfollowers · followed you before, gone now',small:'Never followed back · under 10k followers',big:'Big accounts · 10k+, probably followed on purpose, keep'};   // keep group order, done stay in place
+    $('#list').innerHTML=vis.map((i,n)=>(n&&vis[n-1].group===i.group?'':`<div class="grp">${G[i.group]} <span class="count">${vis.filter(x=>x.group===i.group).length}</span></div>`)+post(i,done[i.id])).join('');return}
   $('#list').innerHTML=items.map(i=>TAB==='connect'?builder(i,done[i.id]):post(i,done[i.id])).join('');
 }
 function renderTrending(){
@@ -77,7 +82,11 @@ function renderTrending(){
       r.examples.map(e=>`<a class="ex" href="#" data-open="${esc(e.url)}"><b>@${esc(e.handle)}</b> · ${k(e.views)} views<br>${esc(e.text)}</a>`).join('')+`</details>`}).join('');
 }
 function post(i,d){
-  const rising=TAB==='rising'||TAB==='watched',pill=TAB==='mutuals'?`<span class="pill${i.tier===2?' t2':''}">${esc(i.verdict)}</span>${i.owe?`<span class="pill owe ${i.bal>0?'pos':i.bal<0?'neg':'even'}" title="last 30 days: their comments on your posts minus your replies on theirs">${esc(i.owe)}</span>`:''}`:TAB==='watched'?(i.age<15?'<span class="pill">Just posted</span>':''):!rising?(i.oneway?'<span class="pill t2">one-way</span>':''):i.verdict==='WATCH'?'<span class="pill watch">Too early</span>':'<span class="pill">Climbing</span>';
+  const rising=TAB==='rising'||TAB==='watched',pill=TAB==='mutuals'?`<span class="pill${i.tier===2?' t2':''}">${esc(i.verdict)}</span>${i.owe?`<span class="pill owe ${i.bal>0?'pos':i.bal<0?'neg':'even'}" title="last 30 days: their comments on your posts minus your replies on theirs">${esc(i.owe)}</span>`:''}${i.mut===false?'<span class="pill nm" title="you don\'t follow each other both ways; on X replies between mutual follows rank ~4x">not mutual</span>':''}`:TAB==='cleanup'?(i.talk?`<span class="pill">commented on your posts ${i.talk}x</span>`:''):TAB==='watched'?(i.age<15?'<span class="pill">Just posted</span>':''):!rising?(i.oneway?'<span class="pill t2">one-way</span>':''):i.verdict==='WATCH'?'<span class="pill watch">Too early</span>':'<span class="pill">Climbing</span>';
+  if(TAB==='cleanup')return `<div class="c ${d?'done':''}" data-id="${i.id}" data-url="${esc(i.url)}">
+ <button class="chk" title="Mark done"></button><img class="av" src="${esc(i.avatar)}"><div class="body">
+ <div class="hd"><b>${esc(i.name||'@'+i.handle)}</b>${pill}</div><div class="meta wrap">@${esc(i.handle)} · ${k(i.followers)} followers${i.seen?` · <b>last seen following ${new Date(i.seen+'T12:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}</b>`:''}</div>
+ <div class="bio">${esc(i.text)}</div><div class="st"><span>Opens their profile</span><button class="skip">Skip</button></div></div></div>`;
   const meta=rising?`@${esc(i.handle)} · <b>${mins(i.age)}</b> · <b>+${k(i.vpm)} views/min</b> · ${k(i.followers)} followers`:`@${esc(i.handle)} · <b>${mins(i.age)} ago</b> · ${k(i.followers)} followers`;
   return `<div class="c ${d?'done':''}" data-id="${i.id}" data-topic="${esc(i.topic||'')}" data-url="${esc(i.url)}">
  <button class="chk" title="Mark done"></button><img class="av" src="${esc(i.avatar)}"><div class="body">
@@ -142,6 +151,10 @@ async function toPng(blob){
   return await new Promise(r=>c.toBlob(r,'image/png'));
 }
 async function copyMeme(m){
+  if(m.file.endsWith('.gif')){   // browsers can't put a GIF on the clipboard, so the finder copies the file itself (Mac only)
+    const r=await api('/api/meme-clip?id='+m.id).catch(()=>null);
+    if(r&&r.ok){toast('GIF copied. Cmd+V in your reply');api('/api/meme-use?id='+m.id).catch(()=>{});return}
+  }
   try{const b=await (await fetch(mimg(m))).blob();const png=await toPng(b);
     await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);
     toast(m.file.endsWith('.gif')?'Copied (as a still image). Cmd+V in your reply':'Copied. Cmd+V in your reply');api('/api/meme-use?id='+m.id).catch(()=>{})}
@@ -168,6 +181,12 @@ function memeClick(e){
   if(e.target.closest('.mtagbox'))return;
   copyMeme(m);
 }
+async function addMemeUrl(url){
+  toast('Saving GIF…');const tags=(MTAG!=='all'&&MTAG!=='untagged')?[MTAG]:[];
+  const m=await api('/api/meme-url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,tags})}).catch(()=>null);
+  if(!m||m.error){toast('Could not save that link'+(m&&m.error?': '+m.error:''));return}
+  await loadMemes();toast('Saved. Add tags, then Enter');tagEditor(MEMES.items.find(x=>x.id===m.id)||m,true);
+}
 async function addMemeBlob(blob){
   if(!blob||!blob.type.startsWith('image/'))return;
   const data=await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(blob)});
@@ -179,8 +198,10 @@ async function addMemeBlob(blob){
 document.addEventListener('paste',e=>{
   if(TAB!=='memes'||inInput(e))return;
   const items=[...(e.clipboardData||{}).items||[]].filter(i=>i.type.startsWith('image/'));
-  if(!items.length){toast('No image on the clipboard. Right-click an image, Copy image');return}
-  e.preventDefault();items.forEach(i=>addMemeBlob(i.getAsFile()));
+  const text=((e.clipboardData&&e.clipboardData.getData('text/plain'))||'').trim();
+  if(!items.length&&/^https?:\/\/\S+$/.test(text)){e.preventDefault();addMemeUrl(text);return}
+  if(!items.length){toast('No image on the clipboard. Copy an image, or paste a GIF link');return}
+  e.preventDefault();const gif=items.find(i=>i.type==='image/gif');(gif?[gif]:items).forEach(i=>addMemeBlob(i.getAsFile()));
 });
 document.addEventListener('dragover',e=>{if(TAB==='memes')e.preventDefault()});
 document.addEventListener('drop',e=>{if(TAB!=='memes')return;e.preventDefault();[...e.dataTransfer.files].forEach(addMemeBlob)});

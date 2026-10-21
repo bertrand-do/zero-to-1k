@@ -20,7 +20,15 @@ HF='mutuals_history.json'
 def _hist():
   try: return json.load(open(HF)),False
   except Exception: return {'comments':{},'replies':{}},True
-def _day(t): return datetime.datetime.fromtimestamp(t).date().isoformat()
+def _tz():   # days are bucketed in your timezone: config "timezone" (e.g. "America/New_York"), else your computer's local time
+  name=CFG.load().get('timezone')
+  if name:
+    try:
+      from zoneinfo import ZoneInfo; return ZoneInfo(name)
+    except Exception: pass
+  return None
+TZ=_tz()
+def _day(t): return (datetime.datetime.fromtimestamp(t,TZ) if TZ else datetime.datetime.fromtimestamp(t).astimezone()).date().isoformat()
 def update_history(me):
   H,first=_hist(); now=time.time(); hours=168 if first else 48; since=int(now-hours*3600); cap=60 if first else 30
   # my own original posts (last 7 days): a reply whose conversation starts at one of them was made ON my post
@@ -93,7 +101,11 @@ def run(hours=48):
   json.dump({'built':now,'handles':OW},open('oneway.json','w'))
   R,done=repliers(H,hours); repaid=[r['h'] for r in R if not r['owed']]; R=[r for r in R if r['owed']]
   BAL=balance(H,now)
-  for r in R: r['reg']=r['h'].lower() in REG; r['bal']=BAL.get(r['h'].lower(),0)
+  # real mutual = they follow me AND I follow them. X's ranking (xai-org/x-algorithm, home-mixer/params/param.rs) adds
+  # BidirectionalFollowReplyWeightBoost=15 on top of ReplyWeight=5, so a reply between mutual follows counts ~4x.
+  # Either list empty (provider down) -> treat everyone as mutual rather than mislabel them all.
+  FO={u['h'].lower() for u in followers.follower_list('followers')}; FI={u['h'].lower() for u in followers.follower_list('following')}
+  for r in R: r['reg']=r['h'].lower() in REG; r['bal']=BAL.get(r['h'].lower(),0); r['mut']=not (FO and FI) or (r['h'].lower() in FO and r['h'].lower() in FI)
   N={r['h'].lower():r for r in R}
   batches=[[r['h'] for r in R[i:i+6]] for i in range(0,len(R),6)]   # small batches: one search returns max 50 posts, busy posters crowded others out
   import concurrent.futures as cf
@@ -119,12 +131,12 @@ def run(hours=48):
         per[h]=1; rows.append(x)
   for h in miss:
     if h.lower() not in per: rows.append({'id':'p-'+h,'authorUsername':h,'createdUtc':N[h.lower()]['lp'],'text':'No post of their own in the last 3 days. Open their profile and reply to something recent.','profile':1})
-  # green (commented on my posts) before grey, regulars first within each, then post under 12h, then most recent commenter
-  rows.sort(key=lambda x:(lambda r:(r['post']==0,not r['reg'],now-x['createdUtc']>12*3600,-r['last']))(N[x['authorUsername'].lower()]))
-  items=[dict(id=it['id'],url=f"https://x.com/{it['authorUsername']}"+('' if it.get('profile') else f"/status/{it['id']}"),handle=it['authorUsername'],name=it.get('authorName') or '',avatar=it.get('authorImage') or '',followers=it.get('authorFollowers') or 0,age=int((now-it['createdUtc'])/60),views=it.get('viewCount') or 0,replies=it.get('replyCount') or 0,likes=it.get('likeCount') or 0,vpm=0,text=(it.get('text') or '')[:400],verdict=('⭐ ' if N[it['authorUsername'].lower()]['reg'] else '')+label(N[it['authorUsername'].lower()]),tier=1 if N[it['authorUsername'].lower()]['post'] else 2,bal=N[it['authorUsername'].lower()]['bal'],owe=owe(N[it['authorUsername'].lower()]['bal']),why='replied to you') for it in rows[:100]]
+  # green (commented on my posts) before grey, real mutuals first, then regulars, then post under 12h, then most recent commenter
+  rows.sort(key=lambda x:(lambda r:(r['post']==0,not r['mut'],not r['reg'],now-x['createdUtc']>12*3600,-r['last']))(N[x['authorUsername'].lower()]))
+  items=[dict(id=it['id'],url=f"https://x.com/{it['authorUsername']}"+('' if it.get('profile') else f"/status/{it['id']}"),handle=it['authorUsername'],name=it.get('authorName') or '',avatar=it.get('authorImage') or '',followers=it.get('authorFollowers') or 0,age=int((now-it['createdUtc'])/60),views=it.get('viewCount') or 0,replies=it.get('replyCount') or 0,likes=it.get('likeCount') or 0,vpm=0,text=(it.get('text') or '')[:400],verdict=('⭐ ' if N[it['authorUsername'].lower()]['reg'] else '')+label(N[it['authorUsername'].lower()]),tier=1 if N[it['authorUsername'].lower()]['post'] else 2,bal=N[it['authorUsername'].lower()]['bal'],owe=owe(N[it['authorUsername'].lower()]['bal']),mut=N[it['authorUsername'].lower()]['mut'],why='replied to you') for it in rows[:100]]
   json.dump({'built':now,'stats':ST,'items':items,'repliers':len(R),'repaid':repaid,'silent':[r['h'] for r in R if r['h'].lower() not in per or N[r['h'].lower()].get('nop')][:40]},open('mutuals.json','w'))
   print(time.strftime('%H:%M'),'history comments',len(H['comments']),'my replies',len(H['replies']),'regulars',len(REG),'oneway',len(OW),'stats',ST,flush=True)
-  print(time.strftime('%H:%M'),'mutuals owed',len(R),'repaid',len(repaid),'on my posts',sum(1 for r in R if r['post']),'posts',len(items),flush=True)
+  print(time.strftime('%H:%M'),'mutuals owed',len(R),'repaid',len(repaid),'on my posts',sum(1 for r in R if r['post']),'real mutuals',sum(1 for r in R if r['mut']),'posts',len(items),flush=True)
   return items
 if __name__=='__main__':
   os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','data'))

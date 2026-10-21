@@ -82,3 +82,6 @@ main{padding:8px 8px 40px}
 #myrep{white-space:nowrap;flex:none}
 .pill.t2{background:var(--mut,#8b98a5)}
 .pill.owe{margin-left:4px;background:transparent;border:1px solid currentColor}.pill.owe.pos{color:#f5b301}.pill.owe.neg{color:var(--mut,#8b98a5)}.pill.owe.even{color:#22c55e}
+.pill.nm{margin-left:4px;background:transparent;border:1px solid currentColor;color:var(--mut)}
+.grp{font-size:12px;font-weight:700;color:var(--mut);margin:12px 4px 6px}.grp:first-child{margin-top:4px}
+.meta.wrap{white-space:normal}

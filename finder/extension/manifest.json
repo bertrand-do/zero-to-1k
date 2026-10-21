@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Zero to 1k",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Rising X posts worth replying to, and builders to connect with. Reads your local zero-to-1k finder.",
   "action": {
     "default_title": "Open Zero to 1k"
